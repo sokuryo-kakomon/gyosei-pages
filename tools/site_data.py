@@ -23,7 +23,15 @@ YEARS = [
     ('r04', 4, '令和4年度', 'R4', '2022年11月13日', 2022),
     ('r03', 3, '令和3年度', 'R3', '2021年11月14日', 2021),
     ('r02', 2, '令和2年度', 'R2', '2020年11月8日', 2020),
+    ('r01', 'r1', '令和元年度', 'R1', '2019年11月10日', 2019),
+    ('h30', 'h30', '平成30年度', 'H30', '2018年11月11日', 2018),
+    ('h29', 'h29', '平成29年度', 'H29', '2017年11月12日', 2017),
 ]
+
+
+def stem_of(yn):
+    """genpon / work のファイル名の頭: 令和2〜7年は数字（r7）、令和元年・平成は文字のまま（r1・h30）。"""
+    return yn if isinstance(yn, str) else f'r{yn}'
 
 # 問番号で分ける（平成18年度からの並び。令和6年度から「一般知識等」は「基礎知識」）
 CATS = [
@@ -92,6 +100,7 @@ def blanks_html(s):
 
 def tidy(s):
     """全角空白の連なり（PDF の字下げ・行末）を1つにする。"""
+    s = re.sub(r'[\x00-\x09\x0b-\x1f\u200b-\u200d]', '', s)  # PDF の制御文字・幅なし文字
     s = re.sub(r'(?<=[\d０-９]) (?=[^\x00-\x7f])', '', s)  # PDF の組版の「1 条」「3 か月」の半角空白
     return re.sub(r'[ 　]{2,}', '　', s).strip(' 　')
 
@@ -124,6 +133,11 @@ def fix_items(items):
 
 # 表の枠の中で語が折り返され、行からは肢を機械で組み直せない組合せの問（PDF を見て手で写した）
 COMBO_OVR = {
+    ('h30', 16): ['処分があったことを知った日の翌日/当該審査請求に理由がないこと/裁決/棄却/裁決',
+                  '処分があったことを知った日/執行停止が公共の福祉に重大な影響を及ぼすこと/決定/棄却/裁決',
+                  '処分があったことを知った日の翌日/執行停止が公共の福祉に重大な影響を及ぼすこと/裁決/却下/決定',
+                  '処分があったことを知った日/当該審査請求に理由がないこと/決定/棄却/裁決',
+                  '処分があったことを知った日の翌日/執行停止が公の利益に著しい障害を生ずること/裁決/却下/決定'],
     ('r04', 54): ['国連環境計画/パリ協定/京都議定書/ラムサール条約/気候変動枠組条約',
                   '国連環境計画/京都議定書/パリ協定/気候変動枠組条約/ラムサール条約',
                   'ラムサール条約/パリ協定/国連環境計画/京都議定書/気候変動枠組条約',
@@ -190,21 +204,34 @@ def main():
     kai = kaisetsu()
     qs = []
     for y, yn, label, short, date, ad in YEARS:
-        parsed = json.load(open(os.path.join(ROOT, 'work', f'q_r{yn}.json'), encoding='utf-8'))
-        ans = json.load(open(os.path.join(ROOT, 'work', f'ans_r{yn}.json'), encoding='utf-8'))
-        pdf = f'{B}/pdf/r{yn}_mondai.pdf'
+        parsed = json.load(open(os.path.join(ROOT, 'work', f'q_{stem_of(yn)}.json'), encoding='utf-8'))
+        ans = json.load(open(os.path.join(ROOT, 'work', f'ans_{stem_of(yn)}.json'), encoding='utf-8'))
+        pdf = f'{B}/pdf/{stem_of(yn)}_mondai.pdf'
         for r in parsed:
             n = r['num']
             r['items'] = fix_items(r['items'])
+            ref = ''
+            if r['kind'] == 'choice' and r['choices']:
+                # 肢5 の後ろの（参照条文）（参考条文）は肢ではない: 本文の後ろへ。条文の各号が肢と読み違えられた分（H29 問8）もそこへ
+                cs = r['choices']
+                extra = cs[5:]
+                last = cs[min(4, len(cs) - 1)]
+                m = re.search(r'（参[照考]条文）', last['text'])
+                if m:
+                    ref = last['text'][m.start():]
+                    last['text'] = last['text'][:m.start()]
+                for k, e in enumerate(extra):
+                    ref += ('一二三四五六七八九'[k] if k < 9 else str(k + 1)) + '　' + e['text']
+                r['choices'] = cs[:5]
             kind = r['kind']
             cname, icon, slug, style = category(n)
-            stem = tidy(r['stem'])
+            stem = tidy(r['stem'] + ('\n' + ref if ref else ''))
             stem = re.sub(r'[ⅠⅡⅢⅣⅤ](?:[\s　]+[ⅠⅡⅢⅣⅤ])+[\s　]*$', '', stem)  # 表の見出し
             item_list, choice_list, tables, choice_style = [], [], [], 'sentence'
             extra = {}
             if kind == 'choice':
                 a = ans['choice'][str(n)]
-                ok = [1, 2, 3, 4, 5] if a == '全員正解' else [int(a)]
+                ok = [1, 2, 3, 4, 5] if a in ('全員正解', '正答なし') else [int(a)]
                 cb = combo(r)
                 # 記述ア〜エの後ろに、組合せ表の見出し（ア／イ ウ エ）が記述として紛れた形: 見出しを外して表にする
                 keys = [i['key'] for i in r['items']]
@@ -310,7 +337,7 @@ def main():
         'url': 'https://gyosei-kakomon-drill.com',
         'amazonTag': '',
         'years': [{'id': y, 'num': ad, 'label': label, 'short': short, 'examDate': date, 'ad': ad,
-                   'pdf': {'questions': f'{B}/pdf/r{yn}_mondai.pdf', 'answers': f'{B}/doc/exam/r{yn}ans.html'},
+                   'pdf': {'questions': f'{B}/pdf/{stem_of(yn)}_mondai.pdf', 'answers': f'{B}/doc/exam/{stem_of(yn)}ans.html'},
                    'count': sum(1 for q in qs if q['year'] == y)} for y, yn, label, short, date, ad in YEARS],
         'hoshiYears': [],
         'categories': [{'name': n, 'icon': i, 'slug': s, 'bg': bg, 'fg': fg, 'count': sum(1 for q in qs if q['categorySlug'] == s)}
