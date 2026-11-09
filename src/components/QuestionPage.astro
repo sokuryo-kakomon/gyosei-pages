@@ -32,7 +32,7 @@ const jsonLd = {
 
   <QuestionCard client:load q={q} lawRefs={site.lawRefs} />
   <p class="text-xs text-ink-faint mt-3 leading-relaxed">
-    出典：一般財団法人 行政書士試験研究センター 公表の{q.yearLabel}行政書士試験の試験問題（同センターの許諾を得て掲載）（{q.source ? <a href={q.source} target="_blank" rel="noopener">PDF</a> : 'PDF'}）。問題文は原文のまま掲載しています。正解番号も同機構の公表によります。
+    出典：一般財団法人 行政書士試験研究センター 公表の{q.yearLabel}行政書士試験の試験問題（{q.source ? <a href={q.source} target="_blank" rel="noopener">PDF</a> : 'PDF'}）。問題文は原文のまま掲載しています。正解番号も同機構の公表によります。
   </p>
 
   <nav class="flex justify-between gap-3 mt-6">
