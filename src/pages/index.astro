@@ -1,0 +1,69 @@
+---
+import Base from '../layouts/Base.astro';
+import TopHome from '../components/TopHome.astro';
+import { SITE_NAME, categories, shiQuestions, site, yearSpan } from '../lib/data';
+
+// トップ。行政書士試験の過去問（R7 から新しい順）
+const total = shiQuestions.length;
+const span = yearSpan('shi');
+const title = `${SITE_NAME}｜行政書士 過去問 ${span.short} 全${total}問`;
+const description = `行政書士試験の過去問 ${span.long} 全${total}問を、問題文は原文のまま1問1ページで演習できます。5肢択一・多肢選択・記述式に対応。解答を選ぶと即判定、年度別・分野別の成績を自動記録。登録不要・無料。`;
+const steps = [
+  { n: '一', t: '年度か分野を選ぶ', d: '年度ごとに通しで解くか、苦手な分野だけ絞るか。未回答・要復習だけを出すこともできます。' },
+  { n: '二', t: '解答する', d: '5肢択一はその場で正誤、多肢選択は空欄ごとに答え合わせ、記述式は40字で書いて正解例と見比べます。記録は端末に自動で残り、登録は要りません。' },
+  { n: '三', t: '正解を確かめる', d: '正解は行政書士試験研究センターの公表どおり。記述式はセンター公表の正解例を載せています。' },
+  { n: '四', t: '成績表で弱点を絞る', d: '年度別・分野別の正答率と、間違えた問題の一覧。要復習の問題だけをもう一度解けます。' },
+];
+const jsonLd = {
+  '@context': 'https://schema.org', '@type': 'WebSite', name: SITE_NAME, url: site.url + '/', description,
+  inLanguage: 'ja',
+};
+---
+<Base title={title} description={description} path="/" jsonLd={jsonLd}>
+  <TopHome exam="shi" bg="行">
+  <!-- つかい方 -->
+  <section id="howto">
+    <h2 class="text-2xl mb-4">このサイトのつかい方</h2>
+    <ol class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {steps.map((s) => (
+        <li class="card p-5">
+          <div class="serif text-3xl text-moss mb-1">{s.n}</div>
+          <h3 class="text-base mb-1">{s.t}</h3>
+          <p class="text-sm text-ink-soft leading-relaxed">{s.d}</p>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <!-- 掲載の方針 -->
+  <section>
+    <div class="card p-6 md:p-8 md:grid md:grid-cols-2 md:gap-10">
+      <div>
+        <h2 class="text-2xl mb-3">掲載の方針</h2>
+        <ul class="text-sm text-ink-soft leading-relaxed space-y-2 list-disc pl-5">
+          <li><b class="text-ink">問題文は原文のまま。</b>一般財団法人 行政書士試験研究センターが公表している試験問題を、同センターの許諾を得て、言い回しを変えずに載せています。センター自身が著作権の関係で公表していない問（各年度の問題1・58〜60 など）は載せていません。</li>
+          <li><b class="text-ink">正解は公表どおり。</b>試験後に全員正解とされた問も、公表どおりに判定します。</li>
+          <li><b class="text-ink">1問1ページ。</b>年度と問番号で、どの問題にもすぐ戻れます（例：令和7年度 問1 は /r07/q1/）。</li>
+          <li><b class="text-ink">解説は準備中です。</b>出題当時の法令と今の法令が違う問は、改正の注意書きと今の法令での答えを添える予定です。</li>
+        </ul>
+      </div>
+      <div class="mt-8 md:mt-0">
+        <h2 class="text-2xl mb-3">{span.n}年分{total}問の出題分野</h2>
+        <p class="text-sm text-ink-soft mb-3">問番号による例年の区分で集計したものです。</p>
+        <div class="qhtml"><div class="tbl-wrap"><table>
+          <thead><tr><th>分野</th><th class="text-right">問題数</th><th class="text-right">割合</th></tr></thead>
+          <tbody>
+            {categories.map((c) => (
+              <tr><td><a href={`/practice/?cat=${c.slug}`} class="no-underline">{c.icon} {c.name}</a></td><td class="text-right">{c.count}問</td><td class="text-right">{(c.count / total * 100).toFixed(1)}%</td></tr>
+            ))}
+          </tbody>
+        </table></div></div>
+        <p class="text-sm text-ink-soft leading-relaxed mt-3">
+          1回60問のうち<b class="text-ink">行政法が最も多く</b>（5肢択一の問8〜26 と多肢選択・記述の各1問）、次いで民法です。配点は5肢択一が1問4点、多肢選択が1問8点、記述式が1問20点。基礎知識（問47〜60）には足切りがあります。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  </TopHome>
+</Base>

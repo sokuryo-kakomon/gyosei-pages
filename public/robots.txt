@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://gyosei-kakomon-drill.com/sitemap.xml

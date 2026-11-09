@@ -1,0 +1,198 @@
+{
+ "name": "行政書士 過去問ドリル",
+ "legacyName": "行政書士 過去問ドリル",
+ "url": "https://gyosei-kakomon-drill.com",
+ "adsenseClient": "ca-pub-6694004244397132",
+ "amazonTag": "",
+ "years": [
+  {
+   "id": "r07",
+   "num": 2025,
+   "label": "令和7年度",
+   "short": "R7",
+   "examDate": "2025年11月9日",
+   "ad": 2025,
+   "pdf": {
+    "questions": "https://gyosei-shiken.or.jp/pdf/r7_mondai.pdf",
+    "answers": "https://gyosei-shiken.or.jp/doc/exam/r7ans.html"
+   },
+   "count": 56
+  },
+  {
+   "id": "r06",
+   "num": 2024,
+   "label": "令和6年度",
+   "short": "R6",
+   "examDate": "2024年11月10日",
+   "ad": 2024,
+   "pdf": {
+    "questions": "https://gyosei-shiken.or.jp/pdf/r6_mondai.pdf",
+    "answers": "https://gyosei-shiken.or.jp/doc/exam/r6ans.html"
+   },
+   "count": 56
+  },
+  {
+   "id": "r05",
+   "num": 2023,
+   "label": "令和5年度",
+   "short": "R5",
+   "examDate": "2023年11月12日",
+   "ad": 2023,
+   "pdf": {
+    "questions": "https://gyosei-shiken.or.jp/pdf/r5_mondai.pdf",
+    "answers": "https://gyosei-shiken.or.jp/doc/exam/r5ans.html"
+   },
+   "count": 54
+  },
+  {
+   "id": "r04",
+   "num": 2022,
+   "label": "令和4年度",
+   "short": "R4",
+   "examDate": "2022年11月13日",
+   "ad": 2022,
+   "pdf": {
+    "questions": "https://gyosei-shiken.or.jp/pdf/r4_mondai.pdf",
+    "answers": "https://gyosei-shiken.or.jp/doc/exam/r4ans.html"
+   },
+   "count": 56
+  },
+  {
+   "id": "r03",
+   "num": 2021,
+   "label": "令和3年度",
+   "short": "R3",
+   "examDate": "2021年11月14日",
+   "ad": 2021,
+   "pdf": {
+    "questions": "https://gyosei-shiken.or.jp/pdf/r3_mondai.pdf",
+    "answers": "https://gyosei-shiken.or.jp/doc/exam/r3ans.html"
+   },
+   "count": 55
+  },
+  {
+   "id": "r02",
+   "num": 2020,
+   "label": "令和2年度",
+   "short": "R2",
+   "examDate": "2020年11月8日",
+   "ad": 2020,
+   "pdf": {
+    "questions": "https://gyosei-shiken.or.jp/pdf/r2_mondai.pdf",
+    "answers": "https://gyosei-shiken.or.jp/doc/exam/r2ans.html"
+   },
+   "count": 55
+  }
+ ],
+ "categories": [
+  {
+   "name": "基礎法学",
+   "icon": "📜",
+   "slug": "kisohogaku",
+   "bg": "#EFEBE9",
+   "fg": "#5D4037",
+   "count": 6
+  },
+  {
+   "name": "憲法",
+   "icon": "🏛️",
+   "slug": "kenpo",
+   "bg": "#E3F2FD",
+   "fg": "#1565C0",
+   "count": 33
+  },
+  {
+   "name": "行政法",
+   "icon": "🏢",
+   "slug": "gyoseiho",
+   "bg": "#E8F5E9",
+   "fg": "#2E7D32",
+   "count": 132
+  },
+  {
+   "name": "民法",
+   "icon": "⚖️",
+   "slug": "minpo",
+   "bg": "#FCE4EC",
+   "fg": "#AD1457",
+   "count": 66
+  },
+  {
+   "name": "商法・会社法",
+   "icon": "💼",
+   "slug": "shoho",
+   "bg": "#FFF8E1",
+   "fg": "#8D6E00",
+   "count": 30
+  },
+  {
+   "name": "基礎知識",
+   "icon": "📰",
+   "slug": "kiso",
+   "bg": "#EDE7F6",
+   "fg": "#4527A0",
+   "count": 65
+  }
+ ],
+ "lawRefs": {
+  "laws": [
+   {
+    "key": "kenpo",
+    "name": "日本国憲法",
+    "url": "https://laws.e-gov.go.jp/law/321CONSTITUTION"
+   },
+   {
+    "key": "minpo",
+    "name": "民法",
+    "url": "https://laws.e-gov.go.jp/law/129AC0000000089"
+   },
+   {
+    "key": "gyoteho",
+    "name": "行政手続法",
+    "url": "https://laws.e-gov.go.jp/law/405AC0000000088"
+   },
+   {
+    "key": "fufukuho",
+    "name": "行政不服審査法",
+    "url": "https://laws.e-gov.go.jp/law/426AC0000000068"
+   },
+   {
+    "key": "gyosoho",
+    "name": "行政事件訴訟法",
+    "url": "https://laws.e-gov.go.jp/law/337AC0000000139"
+   },
+   {
+    "key": "kokubaiho",
+    "name": "国家賠償法",
+    "url": "https://laws.e-gov.go.jp/law/322AC0000000125"
+   },
+   {
+    "key": "chijiho",
+    "name": "地方自治法",
+    "url": "https://laws.e-gov.go.jp/law/322AC0000000067"
+   },
+   {
+    "key": "kaishaho",
+    "name": "会社法",
+    "url": "https://laws.e-gov.go.jp/law/417AC0000000086"
+   },
+   {
+    "key": "shoho",
+    "name": "商法",
+    "url": "https://laws.e-gov.go.jp/law/132AC0000000048"
+   }
+  ],
+  "summaries": {},
+  "junsokuPages": {},
+  "defaults": {
+   "minpo": "minpo",
+   "kenpo": "kenpo",
+   "shoho": "kaishaho"
+  }
+ },
+ "source": {
+  "name": "一般財団法人 行政書士試験研究センター「過去の試験問題」",
+  "url": "https://gyosei-shiken.or.jp/doc/exam/index.html"
+ },
+ "hoshiYears": []
+}
