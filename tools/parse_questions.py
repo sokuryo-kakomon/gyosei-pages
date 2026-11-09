@@ -48,20 +48,26 @@ def page_text(p):
 def join_lines(lines):
     """折り返しを戻す。肢・記述の頭（「1 　」「ア」だけの行）は区切りとして残す。"""
     out = []
+    brk = False
     for s in lines:
         t = s.strip()
         if not t:
             continue
-        head = re.match(r'^([1-5])\s*　', t) or re.fullmatch(r'[1-5]', t) or re.fullmatch(r'[アイウエオ]', t) \
-            or re.match(r'^[アイウエオ]\s*　', t)
-        if re.fullmatch(r'[1-5アイウエオ]', t):
+        # 組合せの問の小見出し「空欄Ａ」・表の見出し「Ａ　Ｂ　Ｃ」は捨て、次の行を新しい塊にする
+        if re.fullmatch(r'空欄[Ａ-Ｅ]', t) or re.fullmatch(r'[Ａ-Ｅ](?:[\s　]+[Ａ-Ｅ])+', t):
+            brk = True
+            continue
+        head = re.match(r'^([1-5])\s*　', t) or re.fullmatch(r'[1-5]', t) or re.fullmatch(r'[アイウエオカキクケコ]', t) \
+            or re.match(r'^[アイウエオカキクケコ]\s*　', t) or brk
+        if re.fullmatch(r'[1-5アイウエオカキクケコ]', t):
             out.append(t + '　')   # 番号だけの行: 次の行がその肢の本文
         elif head or not out:
             out.append(t)
-        elif out[-1].endswith('　') and re.fullmatch(r'[1-5アイウエオ]　', out[-1]):
+        elif out[-1].endswith('　') and re.fullmatch(r'[1-5アイウエオカキクケコ]　', out[-1]):
             out[-1] += t
         else:
             out[-1] += t
+        brk = False
     return out
 
 
@@ -123,7 +129,7 @@ def parse(path):
                     choices.append(b)
             # 記述ア〜オ（組合せの問）は stem の中にある
             stem_lines = join_lines('\n'.join(stem).split('\n'))
-            sb = split_marked(stem_lines, r'^([アイウエオ])(?:\s*　|$)')
+            sb = split_marked(stem_lines, r'^([アイウエオカキクケコ])(?:\s*　|$)')
             q['stem'] = ''.join(b['text'] for b in sb if b['key'] is None)
             q['items'] = [b for b in sb if b['key'] is not None]
             q['choices'] = choices

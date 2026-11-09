@@ -92,6 +92,7 @@ def blanks_html(s):
 
 def tidy(s):
     """全角空白の連なり（PDF の字下げ・行末）を1つにする。"""
+    s = re.sub(r'(?<=[\d０-９]) (?=[^\x00-\x7f])', '', s)  # PDF の組版の「1 条」「3 か月」の半角空白
     return re.sub(r'[ 　]{2,}', '　', s).strip(' 　')
 
 
@@ -108,15 +109,27 @@ def category(n):
             return name, icon, slug, f'background:{bg};color:{fg};border-color:{fg}'
 
 
+
+def fix_items(items):
+    """記述の後ろに付いた表の見出し「Ⅰ　Ⅱ　Ⅲ…」を外し、1行に並んだ語群（ア 表情　　イ 大きさ…）を1語ずつに分ける。"""
+    out = []
+    for it in items:
+        t = re.sub(r'[ⅠⅡⅢⅣⅤ](?:[\s　]+[ⅠⅡⅢⅣⅤ])+[\s　]*$', '', it['text'])
+        parts = re.split(r'[\s　]{2,}([アイウエオカキクケコ])[\s　]+', t)
+        out.append({'key': it['key'], 'text': parts[0].strip(' 　')})
+        for k in range(1, len(parts) - 1, 2):
+            out.append({'key': parts[k], 'text': parts[k + 1].strip(' 　')})
+    return out
+
 def combo(q):
     """「空欄ア〜オに当てはまる語句の組合せ」の表: 記述ア〜オが見出しだけなら、肢を ア／イ… の組に直す。"""
     items = q['items']
     if not items:
         return None
     head = ''.join(i['key'] + i['text'] for i in items)
-    if re.sub(r'[\s　]', '', head) and not re.fullmatch(r'[アイウエオ]+', re.sub(r'[\s　]', '', head)):
+    if re.sub(r'[\s　]', '', head) and not re.fullmatch(r'[アイウエオカキクケコ]+', re.sub(r'[\s　]', '', head)):
         return None
-    labels = re.findall(r'[アイウエオ]', head)
+    labels = re.findall(r'[アイウエオカキクケコ]', head)
     rows = []
     for c in q['choices']:
         fields = [f for f in re.split(r'[ 　]{2,}|　', c['text'].strip(' 　')) if f]
@@ -136,7 +149,7 @@ def raw_combo(raw):
         return None
     labels = []
     k = s
-    while k < len(lines) and re.fullmatch(r'[アイウエオ]', lines[k]):
+    while k < len(lines) and re.fullmatch(r'[アイウエオカキクケコ]', lines[k]):
         labels.append(lines[k])
         k += 1
     rows, cur = [], None
@@ -162,6 +175,7 @@ def main():
         pdf = f'{B}/pdf/r{yn}_mondai.pdf'
         for r in parsed:
             n = r['num']
+            r['items'] = fix_items(r['items'])
             kind = r['kind']
             cname, icon, slug, style = category(n)
             stem = tidy(r['stem'])
