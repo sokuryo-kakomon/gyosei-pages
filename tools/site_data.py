@@ -126,6 +126,33 @@ def combo(q):
     return labels, rows
 
 
+def raw_combo(raw):
+    """本文の途中に空欄が1行だけ出て記述と読み違えた組合せの問（R5 問21）: 元の行から、本文と表（見出し ア…＋肢 1〜5 の各行）を取り直す。"""
+    lines = raw.split('\n')
+    for s in range(len(lines) - 1, 0, -1):
+        if lines[s] == 'ア':
+            break
+    else:
+        return None
+    labels = []
+    k = s
+    while k < len(lines) and re.fullmatch(r'[アイウエオ]', lines[k]):
+        labels.append(lines[k])
+        k += 1
+    rows, cur = [], None
+    for ln in lines[k:]:
+        if re.fullmatch(r'[1-5]', ln):
+            cur = (ln, [])
+            rows.append(cur)
+        elif cur and ln.strip():
+            cur[1].append(ln.strip())
+    if len(labels) < 2 or len(rows) != 5 or any(len(f) != len(labels) for _, f in rows):
+        return None
+    body = [ln for ln in lines[:s] if not re.fullmatch(r'問題\s*\d+\s*', ln)]
+    stem = tidy(''.join(body))
+    return stem, (labels, [(key, list(zip(labels, f))) for key, f in rows])
+
+
 def main():
     kai = kaisetsu()
     qs = []
@@ -144,6 +171,18 @@ def main():
                 a = ans['choice'][str(n)]
                 ok = [1, 2, 3, 4, 5] if a == '全員正解' else [int(a)]
                 cb = combo(r)
+                # 記述ア〜エの後ろに、組合せ表の見出し（ア／イ ウ エ）が記述として紛れた形: 見出しを外して表にする
+                keys = [i['key'] for i in r['items']]
+                cut = next((k for k in range(1, len(keys)) if keys[k] in keys[:k]), None)
+                if not cb and cut:
+                    real = r['items'][:cut]
+                    cb = combo({'items': r['items'][cut:], 'choices': r['choices']})
+                    if cb:
+                        item_list = [{'key': i['key'], 'html': h(tidy(i['text'])), 'text': tidy(i['text'])} for i in real]
+                    else:
+                        rc = raw_combo(r['raw'])
+                        if rc:
+                            stem, cb = rc
                 if cb:
                     labels, rows = cb
                     choice_list = [{'key': k, 'html': '　'.join(f'<span class="ck">{l}</span>{h(f)}' for l, f in fl),
