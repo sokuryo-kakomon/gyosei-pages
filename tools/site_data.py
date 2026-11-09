@@ -95,6 +95,13 @@ def tidy(s):
     return re.sub(r'[ 　]{2,}', '　', s).strip(' 　')
 
 
+
+def wtidy(t):
+    """語群の1語: 制御文字・行の折り返しの全角空白・後ろに付いた注意書きを外す。"""
+    t = re.sub(r'[\x00-\x1f]', '', t)
+    t = re.split(r'[\u3000 ]*解答は、', t)[0]
+    return tidy(t.replace('\u3000', ''))
+
 def category(n):
     for name, icon, slug, bg, fg, r in CATS:
         if n in r:
@@ -155,7 +162,7 @@ def main():
             elif kind == 'tashi':
                 t = ans['tashi'][str(n)]
                 blanks = {t[i]: int(t[i + 1]) for i in range(0, len(t) - 1, 2)}
-                words = [{'key': w['key'], 'text': tidy(w['text'])} for w in r['words']]
+                words = [{'key': w['key'], 'text': wtidy(w['text'])} for w in r['words']]
                 assert len(words) == 20, (y, n, len(words))
                 wmap = {int(w['key']): w['text'] for w in words}
                 extra = {'blanks': blanks, 'words': words}
