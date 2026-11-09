@@ -183,6 +183,11 @@ def main():
                         rc = raw_combo(r['raw'])
                         if rc:
                             stem, cb = rc
+                if not cb and r['items'] and all(not i['text'].strip(' 　') for i in r['items']):
+                    # 見出し ア イ ウ だけ・肢の語が区切り無しで繋がった表（R5 問18）: 元の行から取り直す
+                    rc = raw_combo(r['raw'])
+                    if rc:
+                        stem, cb = rc
                 if cb:
                     labels, rows = cb
                     choice_list = [{'key': k, 'html': '　'.join(f'<span class="ck">{l}</span>{h(f)}' for l, f in fl),
