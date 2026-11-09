@@ -155,6 +155,17 @@ COMBO_OVR = {
                   '重大な損害/償うことのできない損害/公法上の法律関係/重大な損害/拡大'],
 }
 
+
+# 空欄Ⅰ〜Ⅴの組合せの問（表の語や空欄の枠が PDF の図で、行からは組み直せない）。PDF を見て手で写した
+ROMAN_OVR = {
+    ('h29', 21): (['Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ', 'Ⅴ'], [('Ⅰ', '重大な過失', '過失'), ('Ⅱ', '補充的に適用される', '優先的に適用される'),
+                                             ('Ⅲ', '含まれる', '含まれない'), ('Ⅳ', '適用を排除すべき', '適用を認めるべき'),
+                                             ('Ⅴ', '重大な過失', '過失')], None),
+    ('h29', 50): (['Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ'], [('Ⅰ', '電子マネー', 'クレジットカード'), ('Ⅱ', 'P2P', '解放'),
+                                       ('Ⅲ', '分散', '集約'), ('Ⅳ', '所有者名', 'タイムスタンプ')], None),
+    ('h29', 25): (['Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ'], None, ('。。しかし、。そして、のであり、。以上', '。Ⅰ。しかし、Ⅱ。そして、Ⅲのであり、Ⅳ。以上')),
+}
+
 def combo(q):
     """「空欄ア〜オに当てはまる語句の組合せ」の表: 記述ア〜オが見出しだけなら、肢を ア／イ… の組に直す。"""
     items = q['items']
@@ -210,6 +221,13 @@ def main():
         for r in parsed:
             n = r['num']
             r['items'] = fix_items(r['items'])
+            if r['items']:
+                # 最後の記述に、記述の後ろの問いの文（この提案は…どれか。）が繋がった形（H30 問6）: 問いの文を本文の後ろへ
+                last = r['items'][-1]
+                m = re.search(r'(?<=。)(?=(?:この|以下|上記|次の)[^。]*。?.*(?:どれか|いくつあるか)。?$)', last['text'])
+                if m:
+                    r['stem'] = r['stem'] + '\n' + last['text'][m.start():]
+                    last['text'] = last['text'][:m.start()]
             ref = ''
             if r['kind'] == 'choice' and r['choices']:
                 # 肢5 の後ろの（参照条文）（参考条文）は肢ではない: 本文の後ろへ。条文の各号が肢と読み違えられた分（H29 問8）もそこへ
@@ -250,6 +268,17 @@ def main():
                     rc = raw_combo(r['raw'])
                     if rc:
                         stem, cb = rc
+                if (y, n) in ROMAN_OVR:
+                    labels, table, fix = ROMAN_OVR[(y, n)]
+                    if fix:
+                        assert fix[0] in stem, (y, n)
+                        stem = stem.replace(*fix)
+                    if table:
+                        r['items'] = [{'key': k, 'text': f'ア：{a}　イ：{b}'} for k, a, b in table]
+                    ff = [[f for f in re.split(r'[ 　]+', c['text'].strip(' 　')) if f] for c in r['choices']]
+                    assert all(len(f) == len(labels) for f in ff), (y, n, ff)
+                    cb = (labels, [(str(k + 1), list(zip(labels, f))) for k, f in enumerate(ff)])
+                    item_list = [{'key': i['key'], 'html': h(tidy(i['text'])), 'text': tidy(i['text'])} for i in r['items']]
                 if (y, n) in COMBO_OVR:
                     ff = [x.split('/') for x in COMBO_OVR[(y, n)]]
                     labels = [i['key'] for i in r['items']]
