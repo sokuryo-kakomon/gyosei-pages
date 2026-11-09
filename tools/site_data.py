@@ -121,6 +121,26 @@ def fix_items(items):
             out.append({'key': parts[k], 'text': parts[k + 1].strip(' 　')})
     return out
 
+
+# 表の枠の中で語が折り返され、行からは肢を機械で組み直せない組合せの問（PDF を見て手で写した）
+COMBO_OVR = {
+    ('r04', 54): ['国連環境計画/パリ協定/京都議定書/ラムサール条約/気候変動枠組条約',
+                  '国連環境計画/京都議定書/パリ協定/気候変動枠組条約/ラムサール条約',
+                  'ラムサール条約/パリ協定/国連環境計画/京都議定書/気候変動枠組条約',
+                  'ラムサール条約/国連環境計画/気候変動枠組条約/京都議定書/パリ協定',
+                  '京都議定書/気候変動枠組条約/ラムサール条約/国連環境計画/パリ協定'],
+    ('r03', 6): ['内閣の法案提出権を否定し（国会中心立法の原則）/議員立法の活性化を求めること（国会単独立法の原則）',
+                 '国権の最高機関は国会であり（国会中心立法の原則）/内閣の独立命令は禁止されること（国会単独立法の原則）',
+                 '法律は国会の議決のみで成立し（国会単独立法の原則）/天皇による公布を要しないこと（国会中心立法の原則）',
+                 '国会が立法権を独占し（国会中心立法の原則）/法律は国会の議決のみで成立すること（国会単独立法の原則）',
+                 '国権の最高機関は国会であり（国会中心立法の原則）/立法権の委任は禁止されること（国会単独立法の原則）'],
+    ('r03', 17): ['重大な損害/重大な損害/私法上の法律関係/損害/拡大',
+                  '償うことのできない損害/重大な損害/現在の法律関係/重大な損害/損害',
+                  '重大な損害/損害/現在の法律関係/重大な損害/損害',
+                  '償うことのできない損害/損害/私法上の法律関係/損害/拡大',
+                  '重大な損害/償うことのできない損害/公法上の法律関係/重大な損害/拡大'],
+}
+
 def combo(q):
     """「空欄ア〜オに当てはまる語句の組合せ」の表: 記述ア〜オが見出しだけなら、肢を ア／イ… の組に直す。"""
     items = q['items']
@@ -179,6 +199,7 @@ def main():
             kind = r['kind']
             cname, icon, slug, style = category(n)
             stem = tidy(r['stem'])
+            stem = re.sub(r'[ⅠⅡⅢⅣⅤ](?:[\s　]+[ⅠⅡⅢⅣⅤ])+[\s　]*$', '', stem)  # 表の見出し
             item_list, choice_list, tables, choice_style = [], [], [], 'sentence'
             extra = {}
             if kind == 'choice':
@@ -202,6 +223,12 @@ def main():
                     rc = raw_combo(r['raw'])
                     if rc:
                         stem, cb = rc
+                if (y, n) in COMBO_OVR:
+                    ff = [x.split('/') for x in COMBO_OVR[(y, n)]]
+                    labels = [i['key'] for i in r['items']]
+                    assert all(len(f) == len(labels) for f in ff), (y, n)
+                    cb = (labels, [(str(k + 1), list(zip(labels, f))) for k, f in enumerate(ff)])
+                    item_list = []
                 if cb:
                     labels, rows = cb
                     choice_list = [{'key': k, 'html': '　'.join(f'<span class="ck">{l}</span>{h(f)}' for l, f in fl),
