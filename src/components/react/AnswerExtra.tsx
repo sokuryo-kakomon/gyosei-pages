@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Question } from '../../lib/types';
 import { recordAnswer, type Rec } from '../../store/progress';
+import KijutsuGrade from './KijutsuGrade';
 
 // 多肢選択（問41〜43）: 空欄ア〜エそれぞれに語群 1〜20 から選び、まとめて答え合わせ。
 // 1空欄2点・4つ全部合って「正解」と記録する（成績表の正答率は全部合った問の割合）。
@@ -56,7 +57,7 @@ export function TashiAnswer({ q, onDone }: { q: Question; onDone: (ok: boolean, 
 }
 
 // 記述（問44〜46）: 40字程度で書き、センターの正解例と見比べて自分で採点する。
-// AI の採点は有料プランの機能（準備中）。
+// AI の採点は有料プランの機能（KijutsuGrade）。
 export function KijutsuAnswer({ q, onDone, onReveal }: { q: Question; onDone: (ok: boolean, rec: Rec) => void; onReveal: () => void }) {
   const [text, setText] = useState('');
   const [shown, setShown] = useState(false);
@@ -78,7 +79,7 @@ export function KijutsuAnswer({ q, onDone, onReveal }: { q: Question; onDone: (o
         {!shown && (
           <button type="button" className="btn btn-primary btn-sm" onClick={() => { setShown(true); onReveal(); }}>正解例と見比べる</button>
         )}
-        <button type="button" className="btn btn-ghost btn-sm" disabled title="有料プランの機能（準備中）">🤖 AI で採点（有料プラン・準備中）</button>
+        <KijutsuGrade q={q} answer={text} />
       </div>
       {shown && (
         <div className="mt-3">
