@@ -3,6 +3,17 @@ import type { Question } from '../../lib/types';
 import { recordAnswer, type Rec } from '../../store/progress';
 import KijutsuGrade from './KijutsuGrade';
 
+// 答えた直後の「次の問題 →」: キーの Enter・→ と同じく data-key="next" のボタン・リンクを押す（新しい道は作らない）
+function NextBtn() {
+  const [label, setLabel] = useState<string | null>(null);
+  useEffect(() => {
+    const b = document.querySelector<HTMLElement>('[data-key="next"]:not([disabled])');
+    setLabel(b ? (/結果/.test(b.textContent ?? '') ? '結果を見る' : '次の問題 →') : null);
+  }, []);
+  if (!label) return null;
+  return <button type="button" className="btn btn-primary btn-sm" onClick={() => document.querySelector<HTMLElement>('[data-key="next"]:not([disabled])')?.click()}>{label}</button>;
+}
+
 // 多肢選択（問41〜43）: 空欄ア〜エそれぞれに語群 1〜20 から選び、まとめて答え合わせ。
 // 1空欄2点・4つ全部合って「正解」と記録する（成績表の正答率は全部合った問の割合）。
 export function TashiAnswer({ q, onDone }: { q: Question; onDone: (ok: boolean, rec: Rec) => void }) {
@@ -52,7 +63,10 @@ export function TashiAnswer({ q, onDone }: { q: Question; onDone: (ok: boolean, 
       ) : (
         <div ref={resRef} className={'mt-3 px-4 py-3 rounded-dojo font-bold flex flex-wrap items-center gap-3 scroll-mb-4 ' + (right === keys.length ? 'bg-moss-pale text-moss-deep' : 'bg-shu-pale text-shu')}>
           <span>{right === keys.length ? '全問正解！' : `${keys.length}つ中 ${right}つ正解`}（{right * 2}点／{keys.length * 2}点）</span>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setSel({}); setChecked(false); }}>もう一度</button>
+          <span className="flex flex-wrap gap-2 ml-auto">
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setSel({}); setChecked(false); }}>もう一度</button>
+            <NextBtn />
+          </span>
         </div>
       )}
     </div>
@@ -98,8 +112,9 @@ export function KijutsuAnswer({ q, onDone, onReveal }: { q: Question; onDone: (o
               <button type="button" className="btn btn-ghost btn-sm" onClick={() => grade(0)}>× 書けなかった</button>
             </div>
           ) : (
-            <div className={'mt-2 px-4 py-2 rounded-dojo font-bold ' + (graded === 2 ? 'bg-moss-pale text-moss-deep' : 'bg-shu-pale text-shu')}>
-              {graded === 2 ? '◎ 書けた' : graded === 1 ? '△ 一部書けた（要復習に入れておくと良いです）' : '× 書けなかった（要復習に入れておくと良いです）'}
+            <div className={'mt-2 px-4 py-2 rounded-dojo font-bold flex flex-wrap items-center gap-3 ' + (graded === 2 ? 'bg-moss-pale text-moss-deep' : 'bg-shu-pale text-shu')}>
+              <span>{graded === 2 ? '◎ 書けた' : graded === 1 ? '△ 一部書けた（要復習に入れました）' : '× 書けなかった（要復習に入れました）'}</span>
+              <span className="ml-auto"><NextBtn /></span>
             </div>
           )}
         </div>

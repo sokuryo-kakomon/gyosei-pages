@@ -45,7 +45,9 @@ export default function QuestionCard({ q, lawRefs, mode = 'page', onAnswered }: 
   const stmtHtml = useMemo(() => ({ __html: q.statementHtml }), [q.statementHtml]);
 
   useEffect(() => { setMounted(true); }, []);
-  useEffect(() => { setPicked(null); setRevealed(false); }, [q.id]);
+  // 多肢・記述を答え終えた印（1問のページの案内を出すため）
+  const [doneExtra, setDoneExtra] = useState(false);
+  useEffect(() => { setPicked(null); setRevealed(false); setDoneExtra(false); }, [q.id]);
   useEffect(() => {
     if (explRef.current) linkifyLawRefs(explRef.current, lawRefs, (h) => setLaw(resolveLaw(lawRefs, h)), lawRefs.defaults?.[q.categorySlug]);
   }, [q.id, lawRefs]);
@@ -75,6 +77,14 @@ export default function QuestionCard({ q, lawRefs, mode = 'page', onAnswered }: 
   const answered = picked !== null;
   // 答えたら「正解！」が画面の外に出ないように（下に隠れている時だけ動かす）
   useEffect(() => { if (answered) resRef.current?.scrollIntoView({ block: 'nearest' }); }, [answered]);
+  // 答えた直後の「次の問題 →」は、キーの Enter・→ と同じく data-key="next" のボタン・リンクを押す（新しい道は作らない）
+  const [nextLabel, setNextLabel] = useState<string | null>(null);
+  useEffect(() => {
+    if (!answered) { setNextLabel(null); return; }
+    const b = document.querySelector<HTMLElement>('[data-key="next"]:not([disabled])');
+    setNextLabel(b ? (/結果/.test(b.textContent ?? '') ? '結果を見る' : '次の問題 →') : null);
+  }, [answered, q.id]);
+  const goNext = () => document.querySelector<HTMLElement>('[data-key="next"]:not([disabled])')?.click();
   // 複数正解・正解なし（全員正解）の問は q.ok に正解と扱う番号がすべて入っている
   const accepted = q.ok ?? [q.answer];
   const isOk = (v: number) => accepted.includes(v);
@@ -142,13 +152,13 @@ export default function QuestionCard({ q, lawRefs, mode = 'page', onAnswered }: 
       {q.kind === 'tashi' && (
         <div className="mt-4">
           <div className="text-sm font-bold text-moss-deep mb-1">👇 空欄ごとに語句を選ぶ</div>
-          <TashiAnswer q={q} onDone={(ok, rec) => { setRevealed(true); onAnswered?.(ok, rec); }} />
+          <TashiAnswer q={q} onDone={(ok, rec) => { setRevealed(true); setDoneExtra(true); onAnswered?.(ok, rec); }} />
         </div>
       )}
       {q.kind === 'kijutsu' && (
         <div className="mt-4">
           <div className="text-sm font-bold text-moss-deep mb-1">👇 答えを書く</div>
-          <KijutsuAnswer q={q} onReveal={() => setRevealed(true)} onDone={(ok, rec) => onAnswered?.(ok, rec)} />
+          <KijutsuAnswer q={q} onReveal={() => setRevealed(true)} onDone={(ok, rec) => { setDoneExtra(true); onAnswered?.(ok, rec); }} />
         </div>
       )}
       {q.kind === 'choice' && <div className="mt-4">
@@ -179,10 +189,18 @@ export default function QuestionCard({ q, lawRefs, mode = 'page', onAnswered }: 
         {answered && (
           <div ref={resRef} className={'mt-3 px-4 py-3 rounded-dojo font-bold flex flex-wrap items-center gap-3 scroll-mb-4 ' + (ok ? 'bg-moss-pale text-moss-deep' : 'bg-shu-pale text-shu')}>
             <span>{ok ? '正解！' : `不正解 … 正解は ${answerLabel}`}</span>
-            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setPicked(null)}>もう一度</button>
+            <span className="flex flex-wrap gap-2 ml-auto">
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setPicked(null)}>もう一度</button>
+              {nextLabel && <button type="button" className="btn btn-primary btn-sm" onClick={goNext}>{nextLabel}</button>}
+            </span>
           </div>
         )}
       </div>}
+      {(answered || doneExtra) && mode === 'page' && (
+        <p className="mt-2 text-sm text-ink-soft">
+          登録不要・結果はこの端末に記録されます。続けるなら → <a href="/practice/?mode=random&go=1">ランダム10問</a> ／ <a href="/practice/">演習を始める</a>
+        </p>
+      )}
 
       {q.figure && !q.figure.essential && (
         <details className="mt-4 text-sm">
@@ -192,7 +210,13 @@ export default function QuestionCard({ q, lawRefs, mode = 'page', onAnswered }: 
         </details>
       )}
 
-      {notice && <div className="qhtml mt-4"><div className="notice">{notice}</div></div>}
+      {/* 記述式は法改正の注意が答えの骨組みになるので、正解例を見るまで解説と同じくぼかす */}
+      {notice && (q.kind === 'kijutsu' && !revealed ? (
+        <div className="qhtml mt-4">
+          <div className="text-sm font-bold text-[#7a4a0a] mb-1">⚠ 法改正の注意があります（答えの手がかりになるので、正解例と見比べた後に読めます）</div>
+          <div className="notice blur-[6px] select-none pointer-events-none max-h-[3.4rem] overflow-hidden" aria-hidden="true">{notice}</div>
+        </div>
+      ) : <div className="qhtml mt-4"><div className="notice">{notice}</div></div>)}
 
       <section className={'relative mt-6 pt-5 border-t-2 border-line' + (revealed ? '' : ' expl-veiled')}>
         <h2 className="text-lg mb-2">解説</h2>
