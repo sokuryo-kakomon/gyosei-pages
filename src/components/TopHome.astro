@@ -12,6 +12,8 @@ const ys = ex.years.filter((y) => ex.questions.some((q) => q.year === y.id));
 const cats = categoriesOf(exam).filter((c) => c.count > 0);
 const exq = exam === 'shi' ? '' : 'exam=hoshi&';
 const tile = 'border border-line rounded-dojo text-ink no-underline hover:border-moss hover:text-moss';
+// 記述式の入口: 最新年度の最初の記述式の問題（記述式の入口が見つからないと言われた）
+const kijutsu = ys.length ? ex.questions.filter((q) => q.year === ys[0].id && q.kind === 'kijutsu').sort((a, b) => a.num - b.num)[0] : undefined;
 ---
 <section class="relative overflow-hidden">
   <div class="absolute -right-10 -top-16 text-[22rem] leading-none serif text-paper-deep select-none pointer-events-none" aria-hidden="true">{bg}</div>
@@ -29,8 +31,8 @@ const tile = 'border border-line rounded-dojo text-ink no-underline hover:border
 
     <!-- 右のカード: ランダム10問・年度・分野（年度が主、分野は小さく） -->
     <div id="select" class="bg-card border border-line rounded-2xl p-5 md:p-7 shadow-lift scroll-mt-20">
-      <!-- 解き方を3つ並べる（模擬試験・一問一答がサイドバーにしか無く見つけにくかった） -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-6">
+      <!-- 解き方を並べる（模擬試験・一問一答・記述式がサイドバーにしか無く見つけにくかった） -->
+      <div class="grid grid-cols-2 gap-2 mb-6">
         <a href={`/practice/?${exq}mode=random&n=10&go=1`} class="flex flex-col justify-center rounded-dojo border border-moss px-4 py-3 font-bold text-moss-deep no-underline hover:bg-moss-pale">
           ランダム10問<span class="text-xs font-normal text-ink-soft">全年度から ›</span>
         </a>
@@ -40,6 +42,11 @@ const tile = 'border border-line rounded-dojo text-ink no-underline hover:border
         <a href={`/ox/${exam === 'shi' ? '' : '?exam=hoshi'}`} class="flex flex-col justify-center rounded-dojo border border-moss px-4 py-3 font-bold text-moss-deep no-underline hover:bg-moss-pale">
           ⭕ 一問一答<span class="text-xs font-normal text-ink-soft">○×でテンポよく ›</span>
         </a>
+        {kijutsu && (
+          <a href={kijutsu.url} class="flex flex-col justify-center rounded-dojo border border-moss px-4 py-3 font-bold text-moss-deep no-underline hover:bg-moss-pale">
+            ✍️ 記述式<span class="text-xs font-normal text-ink-soft">問44〜46・40字で書いて正解例と見比べる ›</span>
+          </a>
+        )}
       </div>
       <h2 class="text-xs tracking-[0.2em] text-ink-soft font-normal mb-3">年度で解く<span class="tracking-normal ml-2 text-ink-faint">（R＝令和・H＝平成）</span></h2>
       <div class="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-6">

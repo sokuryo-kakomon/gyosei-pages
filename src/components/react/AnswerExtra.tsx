@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Question } from '../../lib/types';
 import { recordAnswer, type Rec } from '../../store/progress';
 import KijutsuGrade from './KijutsuGrade';
@@ -9,7 +9,10 @@ export function TashiAnswer({ q, onDone }: { q: Question; onDone: (ok: boolean, 
   const keys = Object.keys(q.blanks ?? {});
   const [sel, setSel] = useState<Record<string, number>>({});
   const [checked, setChecked] = useState(false);
+  const resRef = useRef<HTMLDivElement>(null);
   useEffect(() => { setSel({}); setChecked(false); }, [q.id]);
+  // 答え合わせをしたら結果の枠が画面の外に出ないように（下に隠れている時だけ動かす）
+  useEffect(() => { if (checked) resRef.current?.scrollIntoView({ block: 'nearest' }); }, [checked]);
   const words = q.words ?? [];
   const wordOf = (n: number) => words.find((w) => Number(w.key) === n)?.text ?? '';
   const right = keys.filter((k) => sel[k] === q.blanks![k]).length;
@@ -47,7 +50,7 @@ export function TashiAnswer({ q, onDone }: { q: Question; onDone: (ok: boolean, 
       {!checked ? (
         <button type="button" className="btn btn-primary mt-3" disabled={keys.some((k) => !sel[k])} onClick={check}>答え合わせ</button>
       ) : (
-        <div className={'mt-3 px-4 py-3 rounded-dojo font-bold flex flex-wrap items-center gap-3 ' + (right === keys.length ? 'bg-moss-pale text-moss-deep' : 'bg-shu-pale text-shu')}>
+        <div ref={resRef} className={'mt-3 px-4 py-3 rounded-dojo font-bold flex flex-wrap items-center gap-3 scroll-mb-4 ' + (right === keys.length ? 'bg-moss-pale text-moss-deep' : 'bg-shu-pale text-shu')}>
           <span>{right === keys.length ? '全問正解！' : `${keys.length}つ中 ${right}つ正解`}（{right * 2}点／{keys.length * 2}点）</span>
           <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setSel({}); setChecked(false); }}>もう一度</button>
         </div>
@@ -62,7 +65,10 @@ export function KijutsuAnswer({ q, onDone, onReveal }: { q: Question; onDone: (o
   const [text, setText] = useState('');
   const [shown, setShown] = useState(false);
   const [graded, setGraded] = useState<number | null>(null);
+  const resRef = useRef<HTMLDivElement>(null);
   useEffect(() => { setText(''); setShown(false); setGraded(null); }, [q.id]);
+  // 正解例を開いたら、正解例と自己採点のボタンが画面の外に出ないように（下に隠れている時だけ動かす）
+  useEffect(() => { if (shown) resRef.current?.scrollIntoView({ block: 'nearest' }); }, [shown]);
   const len = [...text.replace(/\s/g, '')].length;
   const grade = (v: number) => {
     setGraded(v);
@@ -82,7 +88,7 @@ export function KijutsuAnswer({ q, onDone, onReveal }: { q: Question; onDone: (o
         <KijutsuGrade q={q} answer={text} />
       </div>
       {shown && (
-        <div className="mt-3">
+        <div ref={resRef} className="mt-3 scroll-mb-4">
           <div className="qhtml"><div className="keybox text-[.95rem]"><b>センター公表の正解例</b><br />{(q.modelAnswer ?? '').split(/(?=正解例\d)/).map((s, i) => <div key={i}>{s}</div>)}</div></div>
           {graded === null ? (
             <div className="flex flex-wrap items-center gap-2 mt-2 text-sm">
