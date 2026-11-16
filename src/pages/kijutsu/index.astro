@@ -1,0 +1,52 @@
+---
+import App from '../../layouts/App.astro';
+import { questions, years, pageTitle, site } from '../../lib/data';
+
+// 記述式（問44〜46）だけの一覧 /kijutsu/。年度ごとに問題の頭と、前回の自己採点の印（この端末の記録）を出す
+const kq = questions.filter((q) => q.exam === 'shi' && q.kind === 'kijutsu');
+const ys = years.map((y) => ({ y, qs: kq.filter((q) => q.year === y.id).sort((a, b) => Number(a.num) - Number(b.num)) })).filter((r) => r.qs.length > 0);
+const title = pageTitle(`行政書士 記述式の過去問 全${kq.length}問（問44〜46）と正解例`);
+const description = `行政書士試験の記述式（問44〜46）${ys.length}年度分・全${kq.length}問を年度ごとに一覧。40字程度で書いて、行政書士試験研究センター公表の正解例と見比べて自己採点できます。登録不要・無料。`;
+const path = '/kijutsu/';
+const jsonLd = { '@context': 'https://schema.org', '@type': 'CollectionPage', name: title, description, url: site.url + path };
+const gist = (s: string) => (s.length > 44 ? s.slice(0, 44) + '…' : s);
+---
+<App title={title} description={description} path={path} jsonLd={jsonLd}>
+  <nav class="text-sm text-ink-soft mb-2"><a href="/">トップ</a> ／ 記述式</nav>
+  <h1 class="text-2xl mb-1">✍️ 記述式（問44〜46）</h1>
+  <p class="text-ink-soft text-sm mb-6">{ys.length}年度分・全{kq.length}問。40字程度で書いてから、センター公表の正解例と見比べて自分で採点します。印は前回の自己採点（この端末の記録）です。</p>
+  {ys.map(({ y, qs }) => (
+    <section class="mb-6">
+      <h2 class="text-lg mb-2"><a href={`/${y.id}/`} class="no-underline text-ink hover:underline">{y.label}</a></h2>
+      <ol class="card divide-y divide-line">
+        {qs.map((q) => (
+          <li data-kq={q.id}>
+            <a href={q.url} class="flex gap-3 items-start px-4 py-3 no-underline text-ink hover:bg-paper-deep/60">
+              <span class="kq-mark w-6 shrink-0 text-center pt-0.5 font-bold text-ink-faint" aria-label="未回答">－</span>
+              <span class="w-12 shrink-0 font-bold">問{q.num}</span>
+              <span class="min-w-0 flex-1">
+                <span class="chip text-[.7rem] mr-2 align-middle" style={q.categoryStyle}>{q.categoryIcon} {q.category}</span>
+                <span class="text-sm text-ink-soft">{gist(q.statementText)}</span>
+              </span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </section>
+  ))}
+  <p class="text-xs text-ink-faint">◎ 要点は書けた ・ △ 一部書けた ・ × 書けなかった ・ － まだ（前回の自己採点。記録はこの端末内のみ）</p>
+  <script>
+    // 成績の記録（gyosei_q_v1）から自己採点の印を付ける。記述は userAnswer が 2＝書けた・1＝一部・0＝書けなかった
+    try {
+      const prog = JSON.parse(localStorage.getItem('gyosei_q_v1') || '{}');
+      const marks: Record<number, [string, string, string]> = { 2: ['◎', 'text-moss-deep', '前回の自己採点：要点は書けた'], 1: ['△', 'text-[#a36a00]', '前回の自己採点：一部書けた'], 0: ['×', 'text-shu', '前回の自己採点：書けなかった'] };
+      document.querySelectorAll<HTMLElement>('[data-kq]').forEach((li) => {
+        const r = prog[li.dataset.kq!];
+        const el = li.querySelector<HTMLElement>('.kq-mark');
+        if (!el || !r?.answered || !(r.userAnswer in marks)) return;
+        const [t, c, l] = marks[r.userAnswer];
+        el.textContent = t; el.classList.remove('text-ink-faint'); el.classList.add(c); el.setAttribute('aria-label', l); el.title = l;
+      });
+    } catch { /* 記録が読めなくても一覧は出す */ }
+  </script>
+</App>

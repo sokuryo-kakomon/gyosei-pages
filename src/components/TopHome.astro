@@ -12,8 +12,8 @@ const ys = ex.years.filter((y) => ex.questions.some((q) => q.year === y.id));
 const cats = categoriesOf(exam).filter((c) => c.count > 0);
 const exq = exam === 'shi' ? '' : 'exam=hoshi&';
 const tile = 'border border-line rounded-dojo text-ink no-underline hover:border-moss hover:text-moss';
-// 記述式の入口: 最新年度の最初の記述式の問題（記述式の入口が見つからないと言われた）
-const kijutsu = ys.length ? ex.questions.filter((q) => q.year === ys[0].id && q.kind === 'kijutsu').sort((a, b) => a.num - b.num)[0] : undefined;
+// 記述式の入口: 記述式だけの一覧 /kijutsu/（記述式の入口が見つからないと言われた）
+const kijutsu = ex.questions.some((q) => q.kind === 'kijutsu') ? { url: '/kijutsu/' } : undefined;
 ---
 <section class="relative overflow-hidden">
   <div class="absolute -right-10 -top-16 text-[22rem] leading-none serif text-paper-deep select-none pointer-events-none" aria-hidden="true">{bg}</div>
@@ -21,7 +21,7 @@ const kijutsu = ys.length ? ex.questions.filter((q) => q.year === ys[0].id && q.
     <div>
       <h1 class="text-4xl md:text-6xl lg:text-5xl xl:text-[3.5rem] leading-tight mb-4"><span class="inline-block">{ex.name}の過去問、</span><br /><span class="inline-block">{span.n}回分・全{ex.questions.length}問。</span></h1>
       <p class="text-lg text-ink-soft mb-6"><span class="inline-block">問題文は原文のまま、</span><span class="inline-block">1問1ページ。</span><span class="inline-block">登録不要・無料。</span></p>
-      <p class="text-sm text-ink-soft -mt-4 mb-6">過去問・解説・成績表・模擬試験は無料。AI に多く質問したい人は <a href="/ai/">有料プラン（月額980円）</a></p>
+      <p class="text-sm text-ink-soft -mt-4 mb-6">過去問・解説・成績表・模擬試験は無料。AI への質問は無料で1日2回。もっと使うなら <a href="/ai/">有料プラン（月額980円）</a></p>
       <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
         <a href={`/practice/${exam === 'shi' ? '' : '?exam=hoshi'}`} class="btn btn-primary text-lg px-8 py-3">演習を始める</a>
         <a href="#" id="resume" class="text-ink-soft no-underline hover:text-moss" hidden>続きから ›</a>

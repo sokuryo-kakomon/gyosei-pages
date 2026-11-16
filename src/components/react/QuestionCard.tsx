@@ -27,11 +27,13 @@ export default function QuestionCard({ q, lawRefs, mode = 'page', onAnswered }: 
   const [mounted, setMounted] = useState(false);
   const [law, setLaw] = useState<LawCard | null>(null);
   const [zoom, setZoom] = useState<string | null>(null);
-  const prog = useStore($progress);
   const bms = useStore($bookmarks);
   const explRef = useRef<HTMLDivElement>(null);
   const resRef = useRef<HTMLDivElement>(null);
-  const prev = mounted ? prog[q.id] : undefined;
+  // 「前回」は開いた時にあった記録だけ（この画面で答えた分は「前回」と呼ばない）
+  const [initPrev, setInitPrev] = useState<Rec | undefined>(undefined);
+  const [answeredHere, setAnsweredHere] = useState(false);
+  const prev = mounted && !answeredHere ? initPrev : undefined;
   const marked = mounted && bms.includes(q.id);
   // React 19 は dangerouslySetInnerHTML のオブジェクトが別物になるたびに innerHTML を
   // 書き直す。解説は linkify で DOM を書き換えるので、オブジェクトを固定して再描画で
@@ -47,7 +49,8 @@ export default function QuestionCard({ q, lawRefs, mode = 'page', onAnswered }: 
   useEffect(() => { setMounted(true); }, []);
   // 多肢・記述を答え終えた印（1問のページの案内を出すため）
   const [doneExtra, setDoneExtra] = useState(false);
-  useEffect(() => { setPicked(null); setRevealed(false); setDoneExtra(false); }, [q.id]);
+  // 記述式も含め、前の記録があっても開いた時は解説・正解例を閉じておく
+  useEffect(() => { setPicked(null); setRevealed(false); setDoneExtra(false); setAnsweredHere(false); setInitPrev($progress.get()[q.id]); }, [q.id]);
   useEffect(() => {
     if (explRef.current) linkifyLawRefs(explRef.current, lawRefs, (h) => setLaw(resolveLaw(lawRefs, h)), lawRefs.defaults?.[q.categorySlug]);
   }, [q.id, lawRefs]);
@@ -93,6 +96,7 @@ export default function QuestionCard({ q, lawRefs, mode = 'page', onAnswered }: 
     if (answered) return;
     setPicked(v);
     setRevealed(true);
+    setAnsweredHere(true);
     const rec = recordAnswer(q.id, v, q.answer, accepted);
     onAnswered?.(isOk(v), rec);
   };
@@ -119,9 +123,12 @@ export default function QuestionCard({ q, lawRefs, mode = 'page', onAnswered }: 
         <header className="flex flex-wrap items-center gap-2 mb-3 text-sm">
           <span className="font-bold">{q.yearLabel} 問{q.num}</span>
           <span className="chip" style={catStyle}>{q.categoryIcon} {q.category}</span>
-          {prev?.answered && (
+          {prev?.answered && (q.kind === 'kijutsu' ? (
+            // 記述式は自己採点なので「正解」と言わない
+            <span className="text-xs text-ink-faint">前回の自己採点：{prev.userAnswer === 2 ? '◎ 要点は書けた' : prev.userAnswer === 1 ? '△ 一部書けた' : '× 書けなかった'}</span>
+          ) : (
             <span className="text-xs text-ink-faint">前回：{prev.correct ? '正解' : '不正解'}（{prev.attempts}回目）</span>
-          )}
+          ))}
           <button type="button" className={'ml-auto btn btn-ghost btn-sm' + (marked ? ' text-shu border-shu' : '')} onClick={() => toggleBookmark(q.id)}>
             {marked ? '★ 印をつけた' : '☆ 印をつける'}
           </button>
@@ -152,29 +159,29 @@ export default function QuestionCard({ q, lawRefs, mode = 'page', onAnswered }: 
       {q.kind === 'tashi' && (
         <div className="mt-4">
           <div className="text-sm font-bold text-moss-deep mb-1">👇 空欄ごとに語句を選ぶ</div>
-          <TashiAnswer q={q} onDone={(ok, rec) => { setRevealed(true); setDoneExtra(true); onAnswered?.(ok, rec); }} />
+          <TashiAnswer q={q} onDone={(ok, rec) => { setRevealed(true); setDoneExtra(true); setAnsweredHere(true); onAnswered?.(ok, rec); }} />
         </div>
       )}
       {q.kind === 'kijutsu' && (
         <div className="mt-4">
           <div className="text-sm font-bold text-moss-deep mb-1">👇 答えを書く</div>
-          <KijutsuAnswer q={q} onReveal={() => setRevealed(true)} onDone={(ok, rec) => { setDoneExtra(true); onAnswered?.(ok, rec); }} />
+          <KijutsuAnswer q={q} onReveal={() => setRevealed(true)} onDone={(ok, rec) => { setDoneExtra(true); setAnsweredHere(true); onAnswered?.(ok, rec); }} />
         </div>
       )}
       {q.kind === 'choice' && <div className="mt-4">
         <div className="text-sm font-bold text-moss-deep mb-1">👇 解答を選ぶ<span className="hidden md:inline font-normal text-xs text-ink-faint ml-2">キー 1〜5 で選択・Enter で次へ</span></div>
         {q.choiceStyle === 'sentence' && q.choices.map((c) => (
-          <button key={c.key} type="button" className={cls(c.value)} disabled={answered} onClick={() => pick(c.value)}>
+          <button key={c.key} type="button" className={cls(c.value)} disabled={answered} onClick={() => pick(c.value)} aria-label={`選択肢${c.key}：${c.text}`}>
             <span className="mark">{markText(c.value)}</span>
-            <span><b className="mr-1">{c.key}．</b><span dangerouslySetInnerHTML={{ __html: c.html }} /></span>
+            <span className="choice-body"><span className="choice-no" aria-hidden="true">{c.key}</span><span dangerouslySetInnerHTML={{ __html: c.html }} /></span>
           </button>
         ))}
         {q.choiceStyle === 'combo' && (
           <div className="flex flex-wrap">
             {q.choices.map((c) => (
-              <button key={c.key} type="button" className={cls(c.value, ' choice-combo')} disabled={answered} onClick={() => pick(c.value)}>
+              <button key={c.key} type="button" className={cls(c.value, ' choice-combo')} disabled={answered} onClick={() => pick(c.value)} aria-label={`選択肢${c.key}：${c.text}`}>
                 <span className="mark">{markText(c.value)}</span>
-                <span><b className="mr-1">{c.key}.</b><span dangerouslySetInnerHTML={{ __html: c.html }} /></span>
+                <span className="choice-body"><span className="choice-no" aria-hidden="true">{c.key}</span><span dangerouslySetInnerHTML={{ __html: c.html }} /></span>
               </button>
             ))}
           </div>
@@ -209,6 +216,8 @@ export default function QuestionCard({ q, lawRefs, mode = 'page', onAnswered }: 
             className="mt-2 max-w-full h-auto border border-line rounded-dojo bg-white cursor-zoom-in" onClick={() => setZoom(q.figure!.src)} />
         </details>
       )}
+
+      {!revealed && <p className="mt-4 text-xs text-ink-faint no-print">🤖 答えると、解説の下で AI に質問できます（無料は1日2回）</p>}
 
       {/* 記述式は法改正の注意が答えの骨組みになるので、正解例を見るまで解説と同じくぼかす */}
       {notice && (q.kind === 'kijutsu' && !revealed ? (
