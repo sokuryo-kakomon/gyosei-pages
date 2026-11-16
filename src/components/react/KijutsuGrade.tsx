@@ -37,12 +37,13 @@ export default function KijutsuGrade({ q, answer }: { q: Question; answer: strin
         title={answer.trim() ? '' : '答えを書くと押せます'}>
         {busy ? '🤖 採点しています…' : '🤖 AI で採点（有料プラン）'}
       </button>
+      <span className="text-xs text-ink-faint">20点満点で採点・足りない語句と直し方を示します・有料プラン（月額980円）</span>
       {(upsell || err || res) && (
         <div className="basis-full mt-2">
           {err && <p className="text-sm text-[#a33] mb-2">{err}</p>}
           {upsell && (
             <div className="card p-4 text-sm">
-              <p className="mb-2">AI の採点は<b>有料プラン（月額980円）</b>の機能です。最上位の AI が、正解例と解説から採点の要素を分けて、要素ごとに点を付けます（AI に質問と合わせて1日15回まで）。</p>
+              <p className="mb-2">AI の採点は<b>有料プラン（月額980円）</b>の機能です。最上位の AI が、正解例と解説から採点の要素を分けて、要素ごとに点を付けます（AI に質問と合わせて1か月90回まで・多い日は1日15回まで）。</p>
               <a href="/ai/" className="btn btn-primary btn-sm no-underline">有料プランを見る</a>
               <span className="text-xs text-ink-faint ml-2">利用コードをお持ちの方も、このページから入れられます。</span>
             </div>

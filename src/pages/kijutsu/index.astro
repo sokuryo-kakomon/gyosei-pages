@@ -6,7 +6,7 @@ import { questions, years, pageTitle, site } from '../../lib/data';
 const kq = questions.filter((q) => q.exam === 'shi' && q.kind === 'kijutsu');
 const ys = years.map((y) => ({ y, qs: kq.filter((q) => q.year === y.id).sort((a, b) => Number(a.num) - Number(b.num)) })).filter((r) => r.qs.length > 0);
 const title = pageTitle(`行政書士 記述式の過去問 全${kq.length}問（問44〜46）と正解例`);
-const description = `行政書士試験の記述式（問44〜46）${ys.length}年度分・全${kq.length}問を年度ごとに一覧。40字程度で書いて、行政書士試験研究センター公表の正解例と見比べて自己採点できます。登録不要・無料。`;
+const description = `行政書士試験の記述式（問44〜46）${ys.length}年度分・全${kq.length}問を年度ごとに一覧。40字程度で書いて、行政書士試験研究センター公表の正解例と見比べて自己採点できます。登録不要・無料。有料プランなら AI が20点満点で採点します。`;
 const path = '/kijutsu/';
 const jsonLd = { '@context': 'https://schema.org', '@type': 'CollectionPage', name: title, description, url: site.url + path };
 const gist = (s: string) => (s.length > 44 ? s.slice(0, 44) + '…' : s);
@@ -14,7 +14,7 @@ const gist = (s: string) => (s.length > 44 ? s.slice(0, 44) + '…' : s);
 <App title={title} description={description} path={path} jsonLd={jsonLd}>
   <nav class="text-sm text-ink-soft mb-2"><a href="/">トップ</a> ／ 記述式</nav>
   <h1 class="text-2xl mb-1">✍️ 記述式（問44〜46）</h1>
-  <p class="text-ink-soft text-sm mb-6">{ys.length}年度分・全{kq.length}問。40字程度で書いてから、センター公表の正解例と見比べて自分で採点します。印は前回の自己採点（この端末の記録）です。</p>
+  <p class="text-ink-soft text-sm mb-6">{ys.length}年度分・全{kq.length}問。40字程度で書いてから、センター公表の正解例と見比べて自分で採点します。印は前回の自己採点（この端末の記録）です。<a href="/ai/">有料プラン</a>なら AI が20点満点で採点します。</p>
   {ys.map(({ y, qs }) => (
     <section class="mb-6">
       <h2 class="text-lg mb-2"><a href={`/${y.id}/`} class="no-underline text-ink hover:underline">{y.label}</a></h2>

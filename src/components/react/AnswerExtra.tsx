@@ -2,13 +2,16 @@ import { useEffect, useRef, useState } from 'react';
 import type { Question } from '../../lib/types';
 import { recordAnswer, type Rec } from '../../store/progress';
 import KijutsuGrade from './KijutsuGrade';
+import { nextLabelOf, toKaisetsu } from '../../lib/examui';
+
+const ExplBtn = () => <button type="button" className="btn btn-ghost btn-sm" onClick={toKaisetsu}>解説を読む ↓</button>;
 
 // 答えた直後の「次の問題 →」: キーの Enter・→ と同じく data-key="next" のボタン・リンクを押す（新しい道は作らない）
 function NextBtn() {
   const [label, setLabel] = useState<string | null>(null);
   useEffect(() => {
     const b = document.querySelector<HTMLElement>('[data-key="next"]:not([disabled])');
-    setLabel(b ? (/結果/.test(b.textContent ?? '') ? '結果を見る' : '次の問題 →') : null);
+    setLabel(b ? nextLabelOf(b) : null);
   }, []);
   if (!label) return null;
   return <button type="button" className="btn btn-primary btn-sm" onClick={() => document.querySelector<HTMLElement>('[data-key="next"]:not([disabled])')?.click()}>{label}</button>;
@@ -65,6 +68,7 @@ export function TashiAnswer({ q, onDone }: { q: Question; onDone: (ok: boolean, 
           <span>{right === keys.length ? '全問正解！' : `${keys.length}つ中 ${right}つ正解`}（{right * 2}点／{keys.length * 2}点）</span>
           <span className="flex flex-wrap gap-2 ml-auto">
             <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setSel({}); setChecked(false); }}>もう一度</button>
+            <ExplBtn />
             <NextBtn />
           </span>
         </div>
@@ -115,7 +119,7 @@ export function KijutsuAnswer({ q, onDone, onReveal }: { q: Question; onDone: (o
           ) : (
             <div className={'mt-2 px-4 py-2 rounded-dojo font-bold flex flex-wrap items-center gap-3 ' + (graded === 2 ? 'bg-moss-pale text-moss-deep' : 'bg-shu-pale text-shu')}>
               <span>{graded === 2 ? '◎ 書けた' : graded === 1 ? '△ 一部書けた（要復習に入れました）' : '× 書けなかった（要復習に入れました）'}</span>
-              <span className="ml-auto"><NextBtn /></span>
+              <span className="ml-auto flex flex-wrap gap-2"><ExplBtn /><NextBtn /></span>
             </div>
           )}
         </div>
