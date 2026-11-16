@@ -110,6 +110,7 @@ export function KijutsuAnswer({ q, onDone, onReveal }: { q: Question; onDone: (o
               <button type="button" className="btn btn-ghost btn-sm" onClick={() => grade(2)}>◎ 要点は書けた</button>
               <button type="button" className="btn btn-ghost btn-sm" onClick={() => grade(1)}>△ 一部書けた</button>
               <button type="button" className="btn btn-ghost btn-sm" onClick={() => grade(0)}>× 書けなかった</button>
+              <span className="basis-full text-xs text-ink-soft">押すと前回の自己採点を書き換えます</span>
             </div>
           ) : (
             <div className={'mt-2 px-4 py-2 rounded-dojo font-bold flex flex-wrap items-center gap-3 ' + (graded === 2 ? 'bg-moss-pale text-moss-deep' : 'bg-shu-pale text-shu')}>

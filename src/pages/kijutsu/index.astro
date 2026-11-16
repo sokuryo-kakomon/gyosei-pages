@@ -36,15 +36,17 @@ const gist = (s: string) => (s.length > 44 ? s.slice(0, 44) + '…' : s);
   ))}
   <p class="text-xs text-ink-faint">◎ 要点は書けた ・ △ 一部書けた ・ × 書けなかった ・ － まだ（前回の自己採点。記録はこの端末内のみ）</p>
   <script>
-    // 成績の記録（gyosei_q_v1）から自己採点の印を付ける。記述は userAnswer が 2＝書けた・1＝一部・0＝書けなかった
+    // 成績の記録（gyosei_q_v1）から自己採点の印を付ける。読み方は問題ページの「前回の自己採点」と同じ selfMarkOf（answered は真なら答えた）
+    import { selfMarkOf } from '../../store/progress';
     try {
       const prog = JSON.parse(localStorage.getItem('gyosei_q_v1') || '{}');
       const marks: Record<number, [string, string, string]> = { 2: ['◎', 'text-moss-deep', '前回の自己採点：要点は書けた'], 1: ['△', 'text-[#a36a00]', '前回の自己採点：一部書けた'], 0: ['×', 'text-shu', '前回の自己採点：書けなかった'] };
       document.querySelectorAll<HTMLElement>('[data-kq]').forEach((li) => {
         const r = prog[li.dataset.kq!];
         const el = li.querySelector<HTMLElement>('.kq-mark');
-        if (!el || !r?.answered || !(r.userAnswer in marks)) return;
-        const [t, c, l] = marks[r.userAnswer];
+        const v = selfMarkOf(r);
+        if (!el || v === null) return;
+        const [t, c, l] = marks[v];
         el.textContent = t; el.classList.remove('text-ink-faint'); el.classList.add(c); el.setAttribute('aria-label', l); el.title = l;
       });
     } catch { /* 記録が読めなくても一覧は出す */ }

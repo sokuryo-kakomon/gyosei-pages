@@ -62,17 +62,27 @@ export function toggleBookmark(qid: string) {
   $bookmarks.set(b.includes(qid) ? b.filter((x) => x !== qid) : [...b, qid]);
 }
 
+// 記録の answered は true と 1 の両方で入っている（前の作り・書き出しの読み込みなど）。読む所はどこも「真なら答えた」で読む
+export const isAnswered = (r?: { answered?: unknown } | null) => !!r?.answered;
+// 記述式の前回の自己採点：2＝要点は書けた・1＝一部・0＝書けなかった。数が無い古い記録は正誤から（正解なら 2、ほかは 0）
+export function selfMarkOf(r?: Rec | null): 0 | 1 | 2 | null {
+  if (!isAnswered(r)) return null;
+  const v = Number(r!.userAnswer);
+  if (v === 0 || v === 1 || v === 2) return v;
+  return r!.correct ? 2 : 0;
+}
+
 // 要復習 = 一度でも間違えていて、まだ 2 回連続で正解できていない
 export const isWeak = (r?: Rec) => !!r && r.ngCount > 0 && r.okStreak < 2;
 
 // 間違えた問題だけ（模擬試験・弱点まとめで同じ数え方）= 直近で不正解 または 要復習
-export const needsReview = (r?: Rec) => (!!r?.answered && !r.correct) || isWeak(r);
+export const needsReview = (r?: Rec) => (isAnswered(r) && !r!.correct) || isWeak(r);
 
 export function summarize(ids: string[], prog: Progress) {
   let answered = 0, correct = 0, weak = 0;
   for (const id of ids) {
     const r = prog[id];
-    if (r?.answered) { answered++; if (r.correct) correct++; }
+    if (isAnswered(r)) { answered++; if (r!.correct) correct++; }
     if (isWeak(r)) weak++;
   }
   return {
